@@ -2,6 +2,7 @@ package com.example.myimageload;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.util.Log;
 import android.widget.ImageView;
 
 import java.io.IOException;
@@ -15,6 +16,7 @@ import java.util.concurrent.Executors;
  * Created by WangPeng on 2018/6/25.
  */
 public class ImageLoad {
+    private static final String TAG = "ImageLoad";
     private ImageCache mImageCache;
 
     public void setImageCache(ImageCache mImageCache) {
@@ -28,7 +30,7 @@ public class ImageLoad {
 
     //加载图片
     public void displayImage(final String imageUrl, final ImageView imageView) {
-        if (mImageCache ==null){
+        if (mImageCache == null) {
             throw new RuntimeException("ImageCache IS NULL!");
         }
         Bitmap bitmap = mImageCache.get(imageUrl);
@@ -48,9 +50,10 @@ public class ImageLoad {
                 if (bitmap == null) {
                     return;
                 }
-                if (imageUrl.equals(imageView.getTag())) {
+                if (imageView.getTag().equals(imageUrl)) {
                     imageView.setImageBitmap(bitmap);
                 }
+                Log.i(TAG, "run: ");
                 mImageCache.put(imageUrl, bitmap);
             }
         });
