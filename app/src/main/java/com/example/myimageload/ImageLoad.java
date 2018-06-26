@@ -15,48 +15,62 @@ import java.util.concurrent.Executors;
  * Created by WangPeng on 2018/6/25.
  */
 public class ImageLoad {
-    //图片缓存
     private ImageCache mImageCache;
+
+    public void setImageCache(ImageCache mImageCache) {
+        this.mImageCache = mImageCache;
+    }
+
     //线程池,线程数量为cpu的数量
-    private ExecutorService mExecutorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+    private ExecutorService mExecutorService = Executors
+            .newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+
 
     //加载图片
-    private void dispalyImage(final String url, final ImageView imageView) {
-        Bitmap bitmap = mImageCache.get(url);
+    public void displayImage(final String imageUrl, final ImageView imageView) {
+        if (mImageCache ==null){
+            throw new RuntimeException("ImageCache IS NULL!");
+        }
+        Bitmap bitmap = mImageCache.get(imageUrl);
         if (bitmap != null) {
             imageView.setImageBitmap(bitmap);
             return;
         }
-        imageView.setTag(url);
+        submitLoadRequest(imageUrl, imageView);
+    }
+
+    private void submitLoadRequest(final String imageUrl, final ImageView imageView) {
+        imageView.setTag(imageUrl);
         mExecutorService.submit(new Runnable() {
             @Override
             public void run() {
-                Bitmap downBitmap = downLoadBitmap(url);
-                if (downBitmap == null) {
+                Bitmap bitmap = downLoadBitmap(imageUrl);
+                if (bitmap == null) {
                     return;
                 }
-                if (imageView.getTag().equals(url)) {
-                    imageView.setImageBitmap(downBitmap);
+                if (imageUrl.equals(imageView.getTag())) {
+                    imageView.setImageBitmap(bitmap);
                 }
-                mImageCache.put(url, downBitmap);
+                mImageCache.put(imageUrl, bitmap);
             }
-
-
         });
     }
 
     private Bitmap downLoadBitmap(String imageUrl) {
         Bitmap bitmap = null;
+        HttpURLConnection connection = null;
         try {
             URL url = new URL(imageUrl);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection = (HttpURLConnection) url.openConnection();
             bitmap = BitmapFactory.decodeStream(connection.getInputStream());
-            connection.disconnect();
         } catch (MalformedURLException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            connection.disconnect();
         }
         return bitmap;
     }
+
 }
